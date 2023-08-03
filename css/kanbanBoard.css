@@ -34,6 +34,15 @@
 	margin:0;
 	padding:0;
 }
+.kanban_board_footers{
+	margin:0;
+	padding:0;
+}
+.kanban_board_footer{
+	margin:1%;
+	padding: 1rem;
+	position: relative;
+}
 .kanban_board_block{
 	max-height: 70vh;
 	margin:1%;

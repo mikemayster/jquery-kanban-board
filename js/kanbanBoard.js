@@ -7,9 +7,20 @@
             colours: [],
             items: [],
             onChange: function(e, ui) {},
-            onReceive: function(e, ui) {}
+            onReceive: function(e, ui) {
+                const id = ui.item.attr('data-id');
+                const block = ui.item.parent().attr('data-block');
+
+                const pos = settings.items.findIndex(el => el.id === Number(id));
+                if (pos >= 0){
+                    settings.items[pos].block = block;
+                }
+
+                console.log("Updating status with id: " +id+" on block: "+block);
+            }
         };
-        const settings = $.extend({}, defaultSettings, options);
+
+        settings = $.extend({}, defaultSettings, options);
 
         // Classes used for styling
         const classes = {
@@ -18,9 +29,12 @@
             kanban_board_blocks: "kanban_board_blocks",
             kanban_board_block: "kanban_board_block",
             kanban_board_item_placeholder: "kanban_board_block_item_placeholder",
+            kanban_board_footers : "kanban_board_footers",
+            kanban_board_footer : "kanban_board_footer"
         };
 
         buildKanban(settings, $this, classes);
+
     }
 }(jQuery));
 
@@ -28,14 +42,17 @@ function buildKanban(settings, $this, classes) {
 
     $this.append('<div class="row '+classes.kanban_board_titles+'"></div>');
     $this.append('<div class="row '+classes.kanban_board_blocks+'"></div>');
+    $this.append('<div class="row '+classes.kanban_board_footers+'"></div>');
 
-    buildTitles(settings, $this, classes);
+    buildHeader(settings, $this, classes);
     buildBlocks(settings, $this, classes);
+    buildFooter(settings, $this, classes);
     buildCards(settings, $this, classes);
 }
-function buildTitles(settings, $this, classes) {
+function buildHeader(settings, $this, classes) {
     settings.titles.forEach(function(item, index) {
         const titleHtml = '<div style="background: '+settings.colours[index]+'" class="col ' + classes.kanban_board_title + '"><p>' + item + '</p></div>';
+
         $this.find('.'+classes.kanban_board_titles).append(titleHtml);
     });
 }
@@ -56,33 +73,110 @@ function buildBlocks(settings, $this, classes) {
         receive: settings.onReceive
     }).disableSelection();
 }
+
+function buildFooter(settings, $this, classes) {
+    settings.titles.forEach(function(item, index) {
+        const addButton = '<div class="col ' + classes.kanban_board_footer + '" data-block="'+item+'"><button type="button" id="addButton" onclick="openModal(\''+ item +'\')" style="width: inherit" class="btn btn-outline-dark">Add Item</button></div>';
+        $this.find('.'+classes.kanban_board_footers).append(addButton);
+    });
+}
 function buildCards(settings, $this, classes) {
     settings.items.forEach(function(item) {
         const block = $this.find('.'+classes.kanban_board_block+'[data-block="'+item.block+'"]');
         const itemHtml = buildCard(item);
         block.append(itemHtml);
     });
+}
 
-    function buildCard(item){
-        let itemHtml = '<div class="card" data-id="'+item.id+'">';
-        itemHtml += '<div class="card-header">'+item.title+'</div>';
+function buildCard(item){
+    let itemHtml = '<div class="card" data-id="'+item.id+'">';
+    itemHtml += '<div class="card-header">';
+    itemHtml += '<div class="row">';
+    itemHtml += '<div class="col-md-10">';
+    itemHtml += '<div class="card-title">'+item.title+'</div>';
+    itemHtml += '</div>';
+    itemHtml += '<div class="col-md-2">';
+    itemHtml += '<button type="button" onclick="deleteCard('+ item.id +', \'' + item.block + '\')" class="btn-close" aria-label="Close"></button>';
+    itemHtml += '</div>';
+    itemHtml += '</div>';
+    itemHtml += '</div>';
 
-        itemHtml += '<div class="card-body">';
-        itemHtml += '<blockquote class="blockquote mb-0">';
-        itemHtml += '<p>'+item.content+'</p>';
 
-        // if(item.link){
-        //     itemHtml += '<a href="'+item.link+'">'+item.link_text+'</a>';
-        // }
 
-        if(item.footer){
-            itemHtml += '<footer class="blockquote-footer">'+item.footer+'</footer>';
-        }
+    itemHtml += '<div class="card-body">';
+    itemHtml += '<blockquote class="blockquote mb-0">';
+    itemHtml += '<p>'+item.content+'</p>';
 
-        itemHtml += '</blockquote>';
-        itemHtml += '</div>';
-        itemHtml += '</div>';
+    // if(item.link){
+    //     itemHtml += '<a href="'+item.link+'">'+item.link_text+'</a>';
+    // }
 
-        return itemHtml;
+    if(item.footer){
+        itemHtml += '<footer class="blockquote-footer">'+item.footer+'</footer>';
     }
+
+    itemHtml += '</blockquote>';
+    itemHtml += '</div>';
+    itemHtml += '</div>';
+
+    return itemHtml;
+}
+
+function openModal(itemName){
+    $('#blockName').val(itemName);
+    $('#modalAddItem').modal('show')
+}
+
+function addItem(){
+    const blockName = $("#blockName").val();
+    const block = $('.kanban_board_block[data-block="'+blockName+'"]');
+
+    const item = prepareItem(blockName);
+
+    const itemHtml = buildCard(item);
+    block.append(itemHtml);
+
+    settings.items.push(item)
+
+    closeModal();
+    console.log("Added card with id: " + item.id);
+}
+
+function deleteCard(id, itemBlock){
+    const block = $('.kanban_board_block[data-block="'+itemBlock+'"]');
+    const card = block.find('.card[data-id="'+id+'"]');
+    if(card.length){
+        card.remove();
+
+        const pos = settings.items.findIndex(el => el.id === id);
+        if (pos >= 0){
+            settings.items.splice(pos, 1);
+        }
+    }
+
+    console.log("Deleted card with id: " +id);
+}
+
+function prepareItem(blockName){
+    const title = $("#title").val();
+    const content = $("#content").val();
+    const footer = $("#footer").val();
+
+    const lastItemIdx = settings.items[settings.items.length - 1].id;
+
+    return {
+        "id": lastItemIdx + 1,
+        "title": title,
+        "content": content,
+        "block" : blockName,
+        "footer": footer
+    }
+}
+
+function closeModal(){
+    $("#title").val("");
+    $("#content").val("");
+    $("#footer").val("");
+
+    $('#modalAddItem').modal('hide')
 }
