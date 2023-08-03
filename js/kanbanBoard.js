@@ -22,70 +22,46 @@
 
         settings = $.extend({}, defaultSettings, options);
 
-        // Classes used for styling
-        const classes = {
-            kanban_board_titles: "kanban_board_titles",
-            kanban_board_title: "kanban_board_title",
-            kanban_board_blocks: "kanban_board_blocks",
-            kanban_board_block: "kanban_board_block",
-            kanban_board_item_placeholder: "kanban_board_block_item_placeholder",
-            kanban_board_footers : "kanban_board_footers",
-            kanban_board_footer : "kanban_board_footer"
-        };
-
-        buildKanban(settings, $this, classes);
+        buildKanban(settings, $this);
 
     }
 }(jQuery));
 
-function buildKanban(settings, $this, classes) {
+function buildKanban(settings, $this) {
 
-    $this.append('<div class="row '+classes.kanban_board_titles+'"></div>');
-    $this.append('<div class="row '+classes.kanban_board_blocks+'"></div>');
-    $this.append('<div class="row '+classes.kanban_board_footers+'"></div>');
+    $this.append('<div class="row kanban_board_titles"></div>');
+    $this.append('<div class="row kanban_board_blocks"></div>');
+    $this.append('<div class="row kanban_board_footers"></div>');
 
     buildModal();
-    buildHeader(settings, $this, classes);
-    buildBlocks(settings, $this, classes);
-    buildFooter(settings, $this, classes);
-    buildCards(settings, $this, classes);
+    buildHeader(settings, $this);
+    buildBlocks(settings, $this);
+    buildFooter(settings, $this);
+    buildCards(settings);
 }
-function buildHeader(settings, $this, classes) {
+function buildHeader(settings, $this) {
     settings.titles.forEach(function(item, index) {
-        const titleHtml = '<div style="background: '+settings.colours[index]+'" class="col ' + classes.kanban_board_title + '"><p>' + item + '</p></div>';
-
-        $this.find('.'+classes.kanban_board_titles).append(titleHtml);
+        $this.find('.kanban_board_titles').append(Header(item, settings.colours[index]));
     });
 }
 
-function buildBlocks(settings, $this, classes) {
+function buildBlocks(settings, $this) {
     settings.titles.forEach(function(item) {
-        const blockHtml = '<div class="col ' + classes.kanban_board_block + '" data-block="'+item+'"></div>';
-        $this.find('.'+classes.kanban_board_blocks).append(blockHtml);
+        $this.find('.kanban_board_blocks').append(Block(item));
     });
 
-    $("."+classes.kanban_board_block).sortable({
-        connectWith: "."+classes.kanban_board_block,
-        containment: "."+classes.kanban_board_blocks,
-        placeholder: classes.kanban_board_item_placeholder,
-        scroll: true,
-        cursor: "move",
-        change: settings.onChange,
-        receive: settings.onReceive
-    }).disableSelection();
+    initializeSortable();
 }
 
-function buildFooter(settings, $this, classes) {
+function buildFooter(settings, $this) {
     settings.titles.forEach(function(item, index) {
-        const addButton = '<div class="col ' + classes.kanban_board_footer + '" data-block="'+item+'"><button type="button" id="addButton" onclick="openModal(\''+ item +'\')" style="width: inherit" class="btn btn-outline-dark">Add Item</button></div>';
-        $this.find('.'+classes.kanban_board_footers).append(addButton);
+        $this.find('.kanban_board_footers').append(Footer(item));
     });
 }
-function buildCards(settings, $this, classes) {
+function buildCards(settings) {
     settings.items.forEach(function(item) {
-        const block = $this.find('.'+classes.kanban_board_block+'[data-block="'+item.block+'"]');
-        const itemHtml = Card(item);
-        block.append(itemHtml);
+        const block = findBlock(item.block);
+        block.append(Card(item));
     });
 }
 
@@ -96,12 +72,11 @@ function openModal(itemName){
 
 function addItem(){
     const blockName = $("#blockName").val();
-    const block = $('.kanban_board_block[data-block="'+blockName+'"]');
+    const block = findBlock(blockName);
 
     const item = prepareItem(blockName);
 
-    const itemHtml = Card(item);
-    block.append(itemHtml);
+    block.append(Card(item));
 
     settings.items.push(item)
 
@@ -110,7 +85,7 @@ function addItem(){
 }
 
 function deleteCard(id, itemBlock){
-    const block = $('.kanban_board_block[data-block="'+itemBlock+'"]');
+    const block = findBlock(itemBlock);
     const card = block.find('.card[data-id="'+id+'"]');
     if(card.length){
         card.remove();
@@ -150,4 +125,20 @@ function closeModal(){
 
 function buildModal(){
     $('#modal').append(ModalAddItem())
+}
+
+function findBlock(item){
+    return $('.kanban_board_block[data-block="'+item+'"]');
+}
+
+function initializeSortable(){
+    $(".kanban_board_block").sortable({
+        connectWith: ".kanban_board_block",
+        containment: ".kanban_board_blocks",
+        placeholder: "kanban_board_block_item_placeholder",
+        scroll: true,
+        cursor: "move",
+        change: settings.onChange,
+        receive: settings.onReceive
+    }).disableSelection();
 }
