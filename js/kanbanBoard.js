@@ -44,6 +44,7 @@ function buildKanban(settings, $this, classes) {
     $this.append('<div class="row '+classes.kanban_board_blocks+'"></div>');
     $this.append('<div class="row '+classes.kanban_board_footers+'"></div>');
 
+    buildModal();
     buildHeader(settings, $this, classes);
     buildBlocks(settings, $this, classes);
     buildFooter(settings, $this, classes);
@@ -83,43 +84,9 @@ function buildFooter(settings, $this, classes) {
 function buildCards(settings, $this, classes) {
     settings.items.forEach(function(item) {
         const block = $this.find('.'+classes.kanban_board_block+'[data-block="'+item.block+'"]');
-        const itemHtml = buildCard(item);
+        const itemHtml = Card(item);
         block.append(itemHtml);
     });
-}
-
-function buildCard(item){
-    let itemHtml = '<div class="card" data-id="'+item.id+'">';
-    itemHtml += '<div class="card-header">';
-    itemHtml += '<div class="row">';
-    itemHtml += '<div class="col-md-10">';
-    itemHtml += '<div class="card-title">'+item.title+'</div>';
-    itemHtml += '</div>';
-    itemHtml += '<div class="col-md-2">';
-    itemHtml += '<button type="button" onclick="deleteCard('+ item.id +', \'' + item.block + '\')" class="btn-close" aria-label="Close"></button>';
-    itemHtml += '</div>';
-    itemHtml += '</div>';
-    itemHtml += '</div>';
-
-
-
-    itemHtml += '<div class="card-body">';
-    itemHtml += '<blockquote class="blockquote mb-0">';
-    itemHtml += '<p>'+item.content+'</p>';
-
-    // if(item.link){
-    //     itemHtml += '<a href="'+item.link+'">'+item.link_text+'</a>';
-    // }
-
-    if(item.footer){
-        itemHtml += '<footer class="blockquote-footer">'+item.footer+'</footer>';
-    }
-
-    itemHtml += '</blockquote>';
-    itemHtml += '</div>';
-    itemHtml += '</div>';
-
-    return itemHtml;
 }
 
 function openModal(itemName){
@@ -133,7 +100,7 @@ function addItem(){
 
     const item = prepareItem(blockName);
 
-    const itemHtml = buildCard(item);
+    const itemHtml = Card(item);
     block.append(itemHtml);
 
     settings.items.push(item)
@@ -179,4 +146,8 @@ function closeModal(){
     $("#footer").val("");
 
     $('#modalAddItem').modal('hide')
+}
+
+function buildModal(){
+    $('#modal').append(ModalAddItem())
 }
