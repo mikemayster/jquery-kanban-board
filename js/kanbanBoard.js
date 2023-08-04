@@ -82,6 +82,7 @@ function addItem(){
 
     closeModal();
     console.log("Added card with id: " + item.id);
+
 }
 
 function deleteCard(id, itemBlock){
@@ -116,10 +117,8 @@ function prepareItem(blockName){
 }
 
 function closeModal(){
-    $("#title").val("");
-    $("#content").val("");
-    $("#footer").val("");
-
+    $('#newModalForm')[0].reset();
+    //$('#newModalForm').validate().resetForm();
     $('#modalAddItem').modal('hide')
 }
 
