@@ -6,3 +6,5 @@
 - Drag & drop tasks
 
 :satellite: Live Demo: [Click me!](https://mikemayster.github.io/jquery-kanban-board/)
+
+![Screenshot](wallpaper.jpg)
